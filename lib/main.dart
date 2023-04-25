@@ -78,7 +78,7 @@ class _MyAppState extends State<MyApp> {
                   const IconButton(
                       iconSize: 50,
                       onPressed: null,
-                      icon: Icon(Icons.circle_rounded)),
+                      icon: Icon(Icons.stop_rounded)),
                 ]),
               ),
             ),
