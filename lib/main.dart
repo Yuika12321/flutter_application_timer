@@ -14,19 +14,55 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int times = 1 * 60; // 1min
+  // int totalTime = 60;
+  int times = 60;
   late Timer timer;
+  String timeView = '0:00:00';
+  bool isRunning = false;
+
   void timeStart() {
-    // 1초마다 1씩 내려감 == 일정 간격마다 수행
-    Timer timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (isRunning) {
+      timeStop();
       setState(() {
-        times--;
+        isRunning = !isRunning;
       });
-    });
+    } else {
+      // 안돌고 있음  => 돌아감, 변경
+      // 1초마다 1씩 내려감 == 일정 간격마다 수행
+      setState(() {
+        isRunning = !isRunning;
+      });
+      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (times == 0) timeStop();
+
+        setState(() {
+          timeView = Duration(seconds: times).toString().split('.')[0];
+          times--;
+        });
+      });
+    }
   }
 
   void timeStop() {
     timer.cancel();
+  }
+
+  void timeReset() {
+    setState(() {
+      timeStop();
+      times = 60;
+
+      isRunning = false;
+      timeView = Duration(seconds: times).toString().split('.').first;
+    });
+  }
+
+  void addTime(int sec) {
+    times += sec;
+    times = times < 0 ? 0 : times;
+    setState(() {
+      timeView = Duration(seconds: times).toString().split('.')[0];
+    });
   }
 
   @override
@@ -49,6 +85,27 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           Flexible(
+              flex: 1,
+              child: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    timeButton(sec: 60, color: Colors.amber),
+                    timeButton(
+                        sec: 30,
+                        color: const Color.fromARGB(255, 44, 152, 147)),
+                    timeButton(
+                        sec: -60,
+                        color: const Color.fromARGB(255, 7, 255, 135)),
+                    timeButton(
+                        sec: -30,
+                        color: const Color.fromARGB(255, 255, 7, 222)),
+                  ],
+                ),
+              )),
+          Flexible(
             flex: 3,
             child: Container(
               width: double.infinity,
@@ -56,7 +113,7 @@ class _MyAppState extends State<MyApp> {
               color: Colors.grey,
               child: Center(
                 child: Text(
-                  '$times',
+                  timeView,
                   style: const TextStyle(color: Colors.black, fontSize: 50),
                 ),
               ),
@@ -71,19 +128,37 @@ class _MyAppState extends State<MyApp> {
               child: Center(
                 child:
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  if (isRunning)
+                    IconButton(
+                        iconSize: 50,
+                        onPressed: timeStart,
+                        icon: const Icon(Icons.pause_circle_rounded))
+                  else
+                    IconButton(
+                        iconSize: 50,
+                        onPressed: timeStart,
+                        icon: const Icon(Icons.play_circle_rounded)),
                   IconButton(
                       iconSize: 50,
-                      onPressed: timeStart,
-                      icon: const Icon(Icons.play_circle_rounded)),
-                  const IconButton(
-                      iconSize: 50,
-                      onPressed: null,
-                      icon: Icon(Icons.stop_rounded)),
+                      onPressed: timeReset,
+                      icon: const Icon(Icons.refresh_rounded))
                 ]),
               ),
             ),
           ),
         ]),
+      ),
+    );
+  }
+
+  GestureDetector timeButton({required int sec, required Color color}) {
+    return GestureDetector(
+      onTap: () => addTime(sec),
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        child: Center(child: Text('$sec')),
       ),
     );
   }
